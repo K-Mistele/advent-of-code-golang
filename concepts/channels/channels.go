@@ -33,4 +33,33 @@ func main() {
 	for i := 0; i < 10; i++ {
 		fmt.Printf("received pong (%s)\n", <-pongs)
 	}
+
+	// mess with closing a channel
+	jobs := make(chan int, 5)
+	done := make(chan bool)
+
+	// immediately executed goroutine
+	go func() {
+
+		// Infinite loop to process jobs until we're done
+		for {
+			j, more := <-jobs // more is true IFF there are more jobs OR the channel is not closed
+			if more {
+				fmt.Println("received a job", j)
+			} else {
+				fmt.Println("All jobs received")
+				done <- true
+				return
+			}
+		}
+
+	}()
+	for j := 1; j <= 3; j++ {
+		jobs <- j // push 3 jobs to the channel
+		fmt.Println("Send job", j)
+	}
+	close(jobs) // close the channel
+	fmt.Println("Send all jobs and closed the channel")
+
+	<-done // wait for goroutine to finish
 }
