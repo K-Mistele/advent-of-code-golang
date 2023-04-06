@@ -23,6 +23,7 @@ func check(err error) {
 	}
 }
 
+// parse out a list of stacks and commands from a list of lines
 func getStacksAndCommands(lines []string) (map[int]stack, []moveCommand) {
 	var stacks map[int]stack = make(map[int]stack)
 	// golang create a slice of pointers to moveCommand structs
@@ -72,6 +73,11 @@ func getStacksAndCommands(lines []string) (map[int]stack, []moveCommand) {
 					break
 				} else if newCrate != ' ' {
 					fmt.Printf("Adding crate %c to stack %d\n", newCrate, currentStackId)
+
+					// NOTE that this looks really weird because we are conceptualizing a stack as a slice, with the
+					//  top of the stack at the back, BUT, we parse the file (and therefore the stacks) from top to bottom
+					// 	so, we add crates to the bottom of the stack, which is the front of the slice, as we read
+					// 	down the file
 					currentStack = append([]crate{crate(newCrate)}, currentStack...)
 					stacks[currentStackId] = currentStack // stacks can't be updated weirdly
 					fmt.Println("updated stack: ", currentStack)
@@ -105,9 +111,31 @@ func getStacksAndCommands(lines []string) (map[int]stack, []moveCommand) {
 	return stacks, commands
 }
 
-// move numCratesToMove from fromStack to toStack, being aware that crates are moved from top to bottom
-func moveCratesFromStackToStack(fromStack stack, toStack stack, numCratesToMove int) {
+// moveCreatesFromStackToStack moves numCreatesToMove crates from the from stack (with ID fromStackId) to the to stack (with ID toStackId)
+// 	Function makes use of pointers to update the map in place, no return value necessary
+func moveCratesFromStackToStack(stacks *map[int]stack, fromStackId int, toStackId int, numCratesToMove int) {
 
+	fromStack := (*stacks)[fromStackId]
+	toStack := (*stacks)[toStackId]
+
+	// move crates from fromStack to toStack
+	for i := 0; i < numCratesToMove; i++ {
+
+		// get the item from the back of the slice
+		topItemOnFromStack := fromStack[len(fromStack)-1]
+
+		// Add it to top/back of the destination stack - UNLIKE during stack parsing, we're not adding to the bottom
+		toStack = append(toStack, topItemOnFromStack)
+
+		// now, trim it off the back of the source stack
+		fromStack = fromStack[:len(fromStack)-1]
+
+	}
+
+	// Commit changes back to the map now that we're done. slices are reference types and the references change when we append
+	// 	so, we need to update the references in the map since the old ones are invalid
+	(*stacks)[fromStackId] = fromStack
+	(*stacks)[toStackId] = toStack
 }
 
 func main() {
@@ -139,6 +167,9 @@ func main() {
 	fmt.Printf("command %v\n", commands[0])
 	fmt.Println("stacks", stacks)
 
-	// execute commands on stacks
-	// TODO
+	for _, command := range commands {
+		moveCratesFromStackToStack(&stacks, command.fromStack, command.toStack, command.amount)
+	}
+
+	fmt.Println(stacks)
 }
