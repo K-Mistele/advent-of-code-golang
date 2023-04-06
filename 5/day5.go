@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-type stack []string
-type crate rune
+type stack []crate
+type crate string
 type moveCommand struct {
 	amount    int
 	fromStack int
@@ -72,7 +72,7 @@ func getStacksAndCommands(lines []string) (map[int]stack, []moveCommand) {
 					break
 				} else if newCrate != ' ' {
 					fmt.Printf("Adding crate %c to stack %d\n", newCrate, currentStackId)
-					currentStack = append([]string{string(newCrate)}, currentStack...)
+					currentStack = append([]crate{crate(newCrate)}, currentStack...)
 					stacks[currentStackId] = currentStack // stacks can't be updated weirdly
 					fmt.Println("updated stack: ", currentStack)
 				} else {
