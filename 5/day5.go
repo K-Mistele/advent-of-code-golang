@@ -118,19 +118,13 @@ func moveCratesFromStackToStack(stacks *map[int]stack, fromStackId int, toStackI
 	fromStack := (*stacks)[fromStackId]
 	toStack := (*stacks)[toStackId]
 
-	// move crates from fromStack to toStack
-	for i := 0; i < numCratesToMove; i++ {
+	// Update algorithm to move stacks from bottom to top
+	itemsToMove := fromStack[len(fromStack)-numCratesToMove:]
+	fmt.Println("Items to move", itemsToMove)
 
-		// get the item from the back of the slice
-		topItemOnFromStack := fromStack[len(fromStack)-1]
-
-		// Add it to top/back of the destination stack - UNLIKE during stack parsing, we're not adding to the bottom
-		toStack = append(toStack, topItemOnFromStack)
-
-		// now, trim it off the back of the source stack
-		fromStack = fromStack[:len(fromStack)-1]
-
-	}
+	// Add it to the top of the destination stack
+	toStack = append(toStack, itemsToMove...)
+	fromStack = fromStack[:len(fromStack)-numCratesToMove]
 
 	// Commit changes back to the map now that we're done. slices are reference types and the references change when we append
 	// 	so, we need to update the references in the map since the old ones are invalid
